@@ -15,6 +15,7 @@ module.exports = class Server {
     this.userList = [];
     this.channel = null;
     this.ready = false;
+    this.waiting = false;
   }
 
   importSettings() {
@@ -58,20 +59,30 @@ module.exports = class Server {
     for (let member of this.guild.members) {
       if (this.settings.usersProcessed.includes(member[0])) continue;
       if (!PRIORITY.includes(member[1].user.username)) continue;
+      if (member[1].user.username == 'IntroductionBot') continue;
       this.userList.push(member[1]);
     }
 
     for (let member of this.guild.members) {
       if (this.settings.usersProcessed.includes(member[0])) continue;
       if (PRIORITY.includes(member[1].user.username)) continue;
+      if (member[1].user.username == 'IntroductionBot') continue;
+      if (member[1].roles.some((role) => role.name.toLowerCase() == 'bot')) continue;
       this.userList.push(member[1]);
     }
   }
 
   getNextUser() {
-    this.currentUser = this.userList[0];
-    if (this.ready) {
-      this.channel.send(`Hey ${this.currentUser}, warum stellst du dich nicht einmal vor?`);
+    if (this.waiting) return;
+    for (let user of this.userList) {
+      if (user.presence.status == 'online') {
+        this.currentUser = user;
+        if (this.ready) {
+          this.waiting = true;
+          this.channel.send(`Hey ${this.currentUser}, warum stellst du dich nicht einmal vor?`);
+        }
+        return;
+      }
     }
   }
 
@@ -84,6 +95,7 @@ module.exports = class Server {
       this.saveSettings();
 
       this.currentUser = null;
+      this.waiting = false;
     }
   }
 

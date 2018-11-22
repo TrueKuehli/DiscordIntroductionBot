@@ -19,6 +19,19 @@ module.exports = class IntroBot extends Discord.Client {
       server.updateUserList();
       server.getNextUser();
     });
+
+    this.on('presenceUpdate', (oldMember, newMember) => {
+      let server = this.serverList[newMember.guild.id];
+      if (newMember.presence.status == 'online') {
+        if (server.waiting) return;
+        server.getNextUser();
+      } else if (newMember.presence.status == 'offline') {
+        if (server.currentUser.id == newMember.user.id) {
+          server.waiting = false;
+          server.getNextUser();
+        }
+      }
+    });
   }
 
   init() {
