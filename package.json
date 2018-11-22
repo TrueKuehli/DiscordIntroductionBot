@@ -1,0 +1,16 @@
+{
+  "name": "discordintroductionbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Timon Scholz",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "discord.js": "^11.4.2",
+    "uws": "^99.0.0"
+  }
+}

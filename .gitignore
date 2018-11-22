@@ -74,3 +74,6 @@ typings/
 
 # FuseBox cache
 .fusebox/
+
+# The discord-bot token file
+token.js
