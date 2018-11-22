@@ -77,3 +77,6 @@ typings/
 
 # The discord-bot token file
 token.js
+
+# The guild specific save files
+bot/settings/

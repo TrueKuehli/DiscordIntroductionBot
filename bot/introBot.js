@@ -4,25 +4,49 @@ const Server = require('./server');
 module.exports = class IntroBot extends Discord.Client {
   constructor() {
     super();
-    this.serverList = [];
+    this.serverList = {};
 
     this.on('ready', () => this.init());
     this.on('message', (msg) => this.handleMessage(msg));
+    this.on('channelCreate', (channel) => {
+      let server = this.serverList[channel.guild.id];
+      if (server.ready) return;
+      if (channel.type != 'text') return;
+      if (channel.name != 'introductions') return;
+
+      server.ready = true;
+      server.channel = channel;
+      server.updateUserList();
+      server.getNextUser();
+    });
   }
 
   init() {
-    for (let guild of this.guilds) {
+    for (let guildAndId of this.guilds) {
+      const id = guildAndId[0];
+      const guild = guildAndId[1];
       if (guild.available) {
         let server = new Server(guild);
         server.importSettings();
+        server.getTextChannel();
+        server.updateUserList();
+        server.getNextUser();
 
-        this.serverList.push(server)
+        this.serverList[guild.id] = server;
       }
     }
   }
 
   handleMessage(msg) {
-    // If message includes !introduction,
-    // wait a bit and then ask someone else to introduce themselves
+    let server = this.serverList[msg.guild.id];
+
+    if (msg.author.id != server.currentUser.id) return;
+    if (msg.content.includes('!update')) {
+      server.updateUserList();
+    }
+    if (msg.content.includes('!next')) {
+      server.completed(server.currentUser)
+      server.getNextUser();
+    }
   }
 }
