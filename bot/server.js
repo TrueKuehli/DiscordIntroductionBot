@@ -4,6 +4,10 @@ const DEFAULTSETTINGS = {
   usersProcessed: [],
 }
 
+const PRIORITY = [
+  'TrueKuehli'
+]
+
 module.exports = class Server {
   constructor(guildObject, settings = {}) {
     this.guild = guildObject;
@@ -52,7 +56,14 @@ module.exports = class Server {
   updateUserList() {
     this.userList = [];
     for (let member of this.guild.members) {
-      if (this.settings.usersProcessed.includes(member[0].id)) continue;
+      if (this.settings.usersProcessed.includes(member[0])) continue;
+      if (!PRIORITY.includes(member[1].user.username)) continue;
+      this.userList.push(member[1]);
+    }
+
+    for (let member of this.guild.members) {
+      if (this.settings.usersProcessed.includes(member[0])) continue;
+      if (PRIORITY.includes(member[1].user.username)) continue;
       this.userList.push(member[1]);
     }
   }
