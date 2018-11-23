@@ -2,11 +2,20 @@ const fs = require('fs');
 
 const DEFAULTSETTINGS = {
   usersProcessed: [],
-}
+};
 
 const PRIORITY = [
-  'TrueKuehli'
-]
+  'TrueKuehli',
+];
+
+const DISALLOWEDROLES = [
+  'bot',
+  'pokecord',
+];
+
+const DISALLOWEDNAMES = [
+  'IntroductionBot',
+];
 
 module.exports = class Server {
   constructor(guildObject, settings = {}) {
@@ -59,15 +68,16 @@ module.exports = class Server {
     for (let member of this.guild.members) {
       if (this.settings.usersProcessed.includes(member[0])) continue;
       if (!PRIORITY.includes(member[1].user.username)) continue;
-      if (member[1].user.username == 'IntroductionBot') continue;
+      if (DISALLOWEDNAMES.includes(member[1].user.username)) continue;
+      if (member[1].roles.some((role) => DISALLOWEDROLES.includes(role.name.toLowerCase()))) continue;
       this.userList.push(member[1]);
     }
 
     for (let member of this.guild.members) {
       if (this.settings.usersProcessed.includes(member[0])) continue;
       if (PRIORITY.includes(member[1].user.username)) continue;
-      if (member[1].user.username == 'IntroductionBot') continue;
-      if (member[1].roles.some((role) => role.name.toLowerCase() == 'bot')) continue;
+      if (DISALLOWEDNAMES.includes(member[1].user.username)) continue;
+      if (member[1].roles.some((role) => DISALLOWEDROLES.includes(role.name.toLowerCase()))) continue;
       this.userList.push(member[1]);
     }
   }

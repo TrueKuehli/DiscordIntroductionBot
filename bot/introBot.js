@@ -32,6 +32,10 @@ module.exports = class IntroBot extends Discord.Client {
         }
       }
     });
+
+    this.on('error', () => {
+      this.destroy().then(() => this.login());
+    });
   }
 
   init() {
