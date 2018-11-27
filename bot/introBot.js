@@ -24,8 +24,10 @@ module.exports = class IntroBot extends Discord.Client {
       let server = this.serverList[newMember.guild.id];
       if (newMember.presence.status == 'online') {
         if (server.waiting) return;
+        server.updateUserList();
         server.getNextUser();
       } else if (newMember.presence.status == 'offline') {
+        if (!server.waiting) return;
         if (server.currentUser.id == newMember.user.id) {
           server.waiting = false;
           server.getNextUser();
@@ -64,6 +66,9 @@ module.exports = class IntroBot extends Discord.Client {
     if (msg.content.includes('!next')) {
       server.completed(server.currentUser)
       server.getNextUser();
+    }
+    if (msg.content.includes('!skip')) {
+      if (server.skip(msg.author)) server.getNextUser();
     }
   }
 }

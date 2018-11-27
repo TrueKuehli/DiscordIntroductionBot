@@ -2,6 +2,8 @@ const fs = require('fs');
 
 const DEFAULTSETTINGS = {
   usersProcessed: [],
+  usersSkipped: [],
+  msgsIgnored: {},
 };
 
 const PRIORITY = [
@@ -16,6 +18,10 @@ const DISALLOWEDROLES = [
 const DISALLOWEDNAMES = [
   'IntroductionBot',
 ];
+
+const ADMINS = [
+  'TrueKuehli',
+]
 
 module.exports = class Server {
   constructor(guildObject, settings = {}) {
@@ -36,6 +42,9 @@ module.exports = class Server {
     try {
       let rawData = fs.readFileSync('./settings/' + id + '.json');
       this.settings = JSON.parse(rawData);
+      if (!this.settings['usersProcessed']) this.settings['usersProcessed'] = [];
+      if (!this.settings['usersSkipped']) this.settings['usersSkipped'] = [];
+      if (!this.settings['msgsIgnored']) this.settings['msgsIgnored'] = {};
     } catch (err) {
       if (err.code == 'ENOENT') {
         this.settings = DEFAULTSETTINGS;
@@ -67,6 +76,8 @@ module.exports = class Server {
     this.userList = [];
     for (let member of this.guild.members) {
       if (this.settings.usersProcessed.includes(member[0])) continue;
+      if (this.settings.usersSkipped.includes(member[0])) continue;
+      if (this.settings.msgsIgnored[member[0]] && this.settings.msgsIgnored[member[0]] > 5) continue;
       if (!PRIORITY.includes(member[1].user.username)) continue;
       if (DISALLOWEDNAMES.includes(member[1].user.username)) continue;
       if (member[1].roles.some((role) => DISALLOWEDROLES.includes(role.name.toLowerCase()))) continue;
@@ -75,6 +86,8 @@ module.exports = class Server {
 
     for (let member of this.guild.members) {
       if (this.settings.usersProcessed.includes(member[0])) continue;
+      if (this.settings.usersSkipped.includes(member[0])) continue;
+      if (this.settings.msgsIgnored[member[0]] && this.settings.msgsIgnored[member[0]] > 5) continue;
       if (PRIORITY.includes(member[1].user.username)) continue;
       if (DISALLOWEDNAMES.includes(member[1].user.username)) continue;
       if (member[1].roles.some((role) => DISALLOWEDROLES.includes(role.name.toLowerCase()))) continue;
@@ -89,6 +102,13 @@ module.exports = class Server {
         this.currentUser = user;
         if (this.ready) {
           this.waiting = true;
+          if (this.settings.msgsIgnored[this.currentUser.id]) {
+            this.settings.msgsIgnored[this.currentUser.id]++;
+          } else {
+            this.settings.msgsIgnored[this.currentUser.id] = 1;
+          }
+          this.saveSettings();
+
           this.channel.send(`Hey ${this.currentUser}, warum stellst du dich nicht einmal vor?`);
         }
         return;
@@ -106,6 +126,20 @@ module.exports = class Server {
 
       this.currentUser = null;
       this.waiting = false;
+    }
+  }
+
+  skip(cmdUser) {
+    if (!ADMINS.includes(cmdUser.username)) {
+      this.channel.send(`Diesen Befehl können nur Admins ausführen, ${cmdUser}.`);
+      return false;
+    } else {
+      this.settings.usersSkipped.push(this.currentUser.id);
+      this.saveSettings();
+
+      this.currentUser = null;
+      this.waiting = false;
+      return true;
     }
   }
 
