@@ -59,6 +59,7 @@ module.exports = class IntroBot extends Discord.Client {
   handleMessage(msg) {
     let server = this.serverList[msg.guild.id];
 
+    if (!server.waiting) return;
     if (msg.author.id != server.currentUser.id) return;
     if (msg.content.includes('!update')) {
       server.updateUserList();
